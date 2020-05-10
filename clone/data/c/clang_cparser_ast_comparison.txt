@@ -1,0 +1,195 @@
+FuncDef: 
+    Decl: main, [], [], []
+      FuncDecl: 
+        TypeDecl: main, []
+          IdentifierType: ['int']
+    Compound: 
+      Decl: a, [], [], []
+        TypeDecl: a, []
+          IdentifierType: ['int']
+      Decl: bai, [], [], []
+        TypeDecl: bai, []
+          IdentifierType: ['int']
+      Decl: wushi, [], [], []
+        TypeDecl: wushi, []
+          IdentifierType: ['int']
+      Decl: ershi, [], [], []
+        TypeDecl: ershi, []
+          IdentifierType: ['int']
+      Decl: shi, [], [], []
+        TypeDecl: shi, []
+          IdentifierType: ['int']
+      Decl: wu, [], [], []
+        TypeDecl: wu, []
+          IdentifierType: ['int']
+      Decl: yi, [], [], []
+        TypeDecl: yi, []
+          IdentifierType: ['int']
+      BinaryOp: >>
+        ID: cin
+        ID: a
+      Assignment: =
+        ID: bai
+        BinaryOp: /
+          ID: a
+          Constant: int, 100
+      Assignment: =
+        ID: a
+        BinaryOp: %
+          ID: a
+          Constant: int, 100
+      Assignment: =
+        ID: wushi
+        BinaryOp: /
+          ID: a
+          Constant: int, 50
+      Assignment: =
+        ID: a
+        BinaryOp: %
+          ID: a
+          Constant: int, 50
+      Assignment: =
+        ID: ershi
+        BinaryOp: /
+          ID: a
+          Constant: int, 20
+      Assignment: =
+        ID: a
+        BinaryOp: %
+          ID: a
+          Constant: int, 20
+      Assignment: =
+        ID: shi
+        BinaryOp: /
+          ID: a
+          Constant: int, 10
+      Assignment: =
+        ID: a
+        BinaryOp: %
+          ID: a
+          Constant: int, 10
+      Assignment: =
+        ID: wu
+        BinaryOp: /
+          ID: a
+          Constant: int, 5
+      Assignment: =
+        ID: a
+        BinaryOp: %
+          ID: a
+          Constant: int, 5
+      Assignment: =
+        ID: yi
+        ID: a
+      BinaryOp: <<
+        BinaryOp: <<
+          ID: cout
+          ID: bai
+        ID: endl
+      BinaryOp: <<
+        BinaryOp: <<
+          ID: cout
+          ID: wushi
+        ID: endl
+      BinaryOp: <<
+        BinaryOp: <<
+          ID: cout
+          ID: ershi
+        ID: endl
+      BinaryOp: <<
+        BinaryOp: <<
+          ID: cout
+          ID: shi
+        ID: endl
+      BinaryOp: <<
+        BinaryOp: <<
+          ID: cout
+          ID: wu
+        ID: endl
+      BinaryOp: <<
+        BinaryOp: <<
+          ID: cout
+          ID: yi
+        ID: endl
+      Return: 
+        Constant: int, 0
+
+
+TRANSLATION_UNIT
+FUNCTION_DECL
+COMPOUND_STMT
+DECL_STMT
+VAR_DECL
+DECL_STMT
+VAR_DECL
+VAR_DECL
+VAR_DECL
+VAR_DECL
+VAR_DECL
+VAR_DECL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+BINARY_OPERATOR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+INTEGER_LITERAL
+BINARY_OPERATOR
+DECL_REF_EXPR
+UNEXPOSED_EXPR
+DECL_REF_EXPR
+RETURN_STMT
+INTEGER_LITERAL
