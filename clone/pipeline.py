@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import sys
 import warnings
+import pickle
 warnings.filterwarnings('ignore')
 
 class Pipeline:
@@ -103,10 +104,19 @@ class Pipeline:
             sequence = []
             func(ast, sequence)
             return sequence
+
         corpus = trees['code'].apply(trans_to_sequences)
-        str_corpus = [' '.join(c) for c in corpus]
-        trees['code'] = pd.Series(str_corpus)
+
+        #print(corpus[9566])
+
+        #str_corpus = [' '.join(c) for c in corpus]
+        #trees['code'] = pd.Series(str_corpus)
         # trees.to_csv(data_path+'train/programs_ns.tsv')
+
+        print(trees['code'])
+        print(trees['code'][9566])
+
+        #print(corpus[9566])
 
         from gensim.models.word2vec import Word2Vec
         w2v = Word2Vec(corpus, size=size, workers=16, sg=1, max_final_vocab=3000)
@@ -120,9 +130,26 @@ class Pipeline:
             from utils import get_blocks_v1 as func
         from gensim.models.word2vec import Word2Vec
 
+        def save_obj(obj, name ):
+            with open('obj/'+ name + '.pkl', 'wb') as f:
+                pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+        def load_obj(name ):
+            with open('obj/' + name + '.pkl', 'rb') as f:
+                return pickle.load(f)
+
         word2vec = Word2Vec.load(self.root+self.language+'/train/embedding/node_w2v_' + str(self.size)).wv
         vocab = word2vec.vocab
         max_token = word2vec.syn0.shape[0]
+
+        data_path = self.root+self.language+'/'
+        debugfile = data_path+"vocabDict"
+
+        dict = {}
+        for elem in vocab:
+            dict[vocab[elem].index] = elem
+
+        save_obj(dict,"tokenDict")
 
         def tree_to_index(node):
             token = node.token
@@ -140,8 +167,11 @@ class Pipeline:
                 btree = tree_to_index(b)
                 tree.append(btree)
             return tree
+
         trees = pd.DataFrame(self.sources, copy=True)
         trees['code'] = trees['code'].apply(trans2seq)
+        print(trees['code'])
+        print(trees['code'][9566])
         if 'label' in trees.columns:
             trees.drop('label', axis=1, inplace=True)
         self.blocks = trees
@@ -188,5 +218,3 @@ if not args.lang:
     exit(1)
 ppl = Pipeline('3:1:1', 'data/', str(args.lang))
 ppl.run()
-
-

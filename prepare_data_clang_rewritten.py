@@ -64,9 +64,6 @@ def get_blocks_for_node(node,block_seq,entry):
     for child in children:
         child_split = child.split(",")
 
-        #if 'KLc4GjIzs27prwhu' in entry:
-        #    print("Appending child: ")
-        #    print(child)
         block_seq.append(ASTNode(child,entry))
         get_blocks_for_node(child,block_seq,entry)
 
@@ -85,12 +82,7 @@ def find_translation_unit_node(entry):
 def get_blocks(node, block_seq, entry):
 
     entry_split = entry.split("¬")
-    #if 'KLc4GjIzs27prwhu' in entry:
-    #    print(node)
-    #    print(len(entry_split))
 
-
-    #start_node = entry_split[0]
     start_node = find_translation_unit_node(entry)
     node_split = start_node.split(",")
 
@@ -106,7 +98,6 @@ def get_blocks(node, block_seq, entry):
 
         if child_split[2] is 'COMPOUND_STMT':
             block_seq.append(ASTNode('End',entry))
-
 
 def get_blocks_pycparser(node, block_seq):
     children = node.get_children()

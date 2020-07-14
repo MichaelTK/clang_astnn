@@ -4,6 +4,7 @@ import clang.cindex
 import random
 import argparse
 import pickle
+import copy
 
 clang.cindex.Config.set_library_file("/home/k1462425/llvm/llvm-project/build/lib/libclang.so")
 
@@ -415,6 +416,36 @@ class Pipeline:
 
     # construct dictionary and train word embedding
     def dictionary_and_embedding(self, input_file, size):
+
+        # Function to convert a char list to a string
+        def listToString(s):
+            str1 = ""
+            for ele in s:
+                str1 += ele
+            return str1
+
+        def findChildren(node,entry):
+            nodeSplit = node.split(",")
+            children = []
+            node_identifier = nodeSplit[0]
+            entry_split = entry.split("¬")
+            for entry_x in entry_split:
+                node_split = entry_x.split(",")
+                if node_split[-1] == node_identifier:
+                    children.append(entry_x)
+            return children
+
+        def find_parent(node, all_nodes_string):
+            all_nodes_split = all_nodes_string.split('¬')
+            node_split = node.split(',')
+            parent_identifier = node_split[-1]
+            parent = ""
+            for nod in all_nodes_split:
+                nod_split = nod.split(',')
+                if nod_split[0] == parent_identifier:
+                    parent = nod
+            return parent
+
         self.size = size
         if not input_file:
             input_file = self.train_file_path
@@ -436,15 +467,139 @@ class Pipeline:
                     if info != '' and '.' not in info:
                         code.append(info)
 
+            #print(code)
+
             return code
+
+        def preprocess_trees_bigrams(code):
+            bigrams = []
+            code_split = code.split('¬')
+
+            for elem in code_split:
+                elem_truncated = elem.split(',')[2:-1]
+                if not elem_truncated in nodesDone:
+                    bigram = get_bigram(elem,code)
+                    if len(bigram) > 1:
+                        nodesDone.append(bigram[0])
+                        nodesDone.append(bigram[1])
+                        bigram[0] = tuple(bigram[0])
+                        bigram[1] = tuple(bigram[1])
+                        bigram = tuple(bigram)
+                        bigram = hash(bigram)
+                        bigrams.append(str(bigram))
+
+            return bigrams
+
+        def get_token(node):
+            if 'End' in node.split(',')[0]:
+                return 'End'
+            else:
+                if 'VAR_DECL' in node.split(',')[2]:
+                    #print(self.node.split(',')[3])
+                    return node.split(',')[3] #instead of putting VAR_DECL, put the name of the variable declared
+
+                if 'CALL_NAME' in node.split(',')[2]:
+                    #print("call_name")
+                    return node.split(',')[3]
+
+                if 'FUNCTION_NAME' in node.split(',')[2]:
+                    #print("call_name")
+                    return node.split(',')[3]
+
+                if 'FUNCTION_TYPE' in node.split(',')[2]:
+                    #print("call_name")
+                    return node.split(',')[3]
+
+                if 'VAR_TYPE' in node.split(',')[2]:
+                    #print("call_name")
+                    return node.split(',')[3]
+
+                if 'INTEGER_VALUE' in node.split(',')[2] and node.split(',')[-2] is not '':
+                    #print("integer_value")
+                    return node.split(',')[3]
+
+                if 'DECL_REF_EXPR' in node.split(',')[2]:
+                    return node.split(',')[3]
+
+                if 'UNARY_OPERATOR' in node.split(',')[2]:
+                    #print(self.node.split(',')[2])
+                    return node.split(',')[3]
+
+                if 'BINARY_OPERATOR' in node.split(',')[2]:
+                    return node.split(',')[3]
+
+                if 'UNEXPOSED_EXPR' in node.split(',')[2]:
+                    return node.split(',')[3]
+
+            return node.split(',')[2]
+
+        def get_bigram(node,entry):
+            children = findChildren(node,entry)
+            bigram = []
+            nodeSplit = node.split(',')
+            newNode = nodeSplit[2:-1]
+            new_node_string = ''
+            code = []
+            if len(newNode) > 0:
+                if 'VAR_DECL' in newNode or 'CALL_NAME' in newNode or 'FUNCTION_TYPE' in newNode or 'VAR_TYPE' in newNode or 'INTEGER_VALUE' in newNode or 'DECL_REF_EXPR' in newNode or 'UNARY_OPERATOR' in newNode or 'BINARY_OPERATOR' in newNode or 'UNEXPOSED_EXPR' in newNode:
+                    #print(newNode)
+                    if 'INTEGER_LITERAL' in newNode and len(INTEGER_LITERAL) < 2:
+                        code.append(newNode[0])
+
+                    else:
+                        code.append(newNode[1])
+                else:
+                    #print(newNode)
+                    code.append(newNode[0])
+            #for info in newNode:
+            #    if info != '' and '.' not in info:
+            #        code.append(info)
+
+            bigram.append(code)
+            code = []
+            if len(children) != 0:
+                nodeSplit = children[0].split(',')
+                newNode = nodeSplit[2:-1]
+                new_node_string = ''
+                if len(newNode) > 0:
+                    if 'VAR_DECL' in newNode or 'CALL_NAME' in newNode or 'FUNCTION_TYPE' in newNode or 'VAR_TYPE' in newNode or 'INTEGER_VALUE' in newNode or 'DECL_REF_EXPR' in newNode or 'UNARY_OPERATOR' in newNode or 'BINARY_OPERATOR' in newNode or 'UNEXPOSED_EXPR' in newNode:
+                        if 'INTEGER_LITERAL' in newNode and len(INTEGER_LITERAL) < 2:
+                            code.append(newNode[0])
+
+                        else:
+                            code.append(newNode[1])
+                    else:
+                        code.append(newNode[0])
+                #for info in newNode:
+                #    if info != '' and '.' not in info:
+                #        code.append(info)
+                bigram.append(code)
+
+            return bigram
 
         def trans_to_sequences(ast):
             sequence = []
             get_sequences(ast, sequence)
             return sequence
 
-        corpus = trees['code'].apply(preprocess_trees)
-        corpus = trees['code']
+        nodesDone = []
+
+        trees_copy = copy.deepcopy(trees['code'])
+        #trees_copy.apply(preprocess_trees_bigrams)
+        corpus = trees_copy.apply(preprocess_trees_bigrams)
+
+        print("CORPUS:")
+        print(corpus)
+        print(corpus[0])
+
+        orig_corpus = trees['code'].apply(preprocess_trees)
+
+        print("ORIG CORPUS:")
+        print(orig_corpus)
+        print(orig_corpus[0])
+
+        #corpus = trees['code'].apply(preprocess_trees)
+        #corpus = trees['code']
         #str_corpus = [' '.join(c) for c in corpus]
         #trees['code'] = pd.Series(str_corpus)
         trees.to_csv(self.root+'train/programs_ns.tsv')
@@ -464,6 +619,62 @@ class Pipeline:
         word2vec = Word2Vec.load(self.root+'train/embedding/node_w2v_' + str(self.size)).wv
         vocab = word2vec.vocab
         max_token = word2vec.syn0.shape[0]
+        nodesDone = []
+
+        def findChildren(node,entry):
+            nodeSplit = node.split(",")
+            children = []
+            node_identifier = nodeSplit[0]
+            entry_split = entry.split("¬")
+            for entry_x in entry_split:
+                node_split = entry_x.split(",")
+                if node_split[-1] == node_identifier:
+                    children.append(entry_x)
+            return children
+
+        def get_bigram(node,entry):
+            children = findChildren(node,entry)
+            bigram = []
+            nodeSplit = node.split(',')
+            newNode = nodeSplit[2:-1]
+            new_node_string = ''
+            code = []
+            if len(newNode) > 0:
+                if 'VAR_DECL' in newNode or 'CALL_NAME' in newNode or 'FUNCTION_TYPE' in newNode or 'VAR_TYPE' in newNode or 'INTEGER_VALUE' in newNode or 'DECL_REF_EXPR' in newNode or 'UNARY_OPERATOR' in newNode or 'BINARY_OPERATOR' in newNode or 'UNEXPOSED_EXPR' in newNode:
+                    if 'INTEGER_LITERAL' in newNode and len(INTEGER_LITERAL) < 2:
+                        code.append(newNode[0])
+
+                    else:
+                        code.append(newNode[1])
+                else:
+                    code.append(newNode[0])
+
+            #for info in newNode:
+            #    if info != '' and '.' not in info:
+            #        code.append(info)
+
+            bigram.append(code)
+            code = []
+            if len(children) != 0:
+                nodeSplit = children[0].split(',')
+                newNode = nodeSplit[2:-1]
+                new_node_string = ''
+                if len(newNode) > 0:
+                    if 'VAR_DECL' in newNode or 'CALL_NAME' in newNode or 'FUNCTION_TYPE' in newNode or 'VAR_TYPE' in newNode or 'INTEGER_VALUE' in newNode or 'DECL_REF_EXPR' in newNode or 'UNARY_OPERATOR' in newNode or 'BINARY_OPERATOR' in newNode or 'UNEXPOSED_EXPR' in newNode:
+                        if 'INTEGER_LITERAL' in newNode and len(INTEGER_LITERAL) < 2:
+                            code.append(newNode[0])
+
+                        else:
+                            code.append(newNode[1])
+                    else:
+                        code.append(newNode[0])
+                #for info in newNode:
+                #    if info != '' and '.' not in info:
+                #        code.append(info)
+                bigram.append(code)
+
+            return bigram
+
 
         def tree_to_index(node):
             token = node.token
@@ -473,12 +684,74 @@ class Pipeline:
                 result.append(tree_to_index(child))
             return result
 
+        def preprocess_trees_bigrams(code):
+            bigrams = []
+            code_split = code.split('¬')
+
+            for elem in code_split:
+                elem_truncated = elem.split(',')[2:-1]
+                if not elem_truncated in nodesDone:
+                    bigram = get_bigram(elem,code)
+                    if len(bigram) > 1:
+                        nodesDone.append(bigram[0])
+                        nodesDone.append(bigram[1])
+                        bigram[0] = tuple(bigram[0])
+                        bigram[1] = tuple(bigram[1])
+                        bigram = tuple(bigram)
+                        bigram = hash(bigram)
+                        tokenNumber = vocab[str(bigram)].index if str(bigram) in vocab else max_token
+                        bigrams.append(tokenNumber)
+
+            return bigrams
+
+        def get_token(node):
+            if 'End' in node.split(',')[0]:
+                return 'End'
+            else:
+                if 'VAR_DECL' in node.split(',')[2]:
+                    #print(self.node.split(',')[3])
+                    return node.split(',')[3] #instead of putting VAR_DECL, put the name of the variable declared
+
+                if 'CALL_NAME' in node.split(',')[2]:
+                    #print("call_name")
+                    return node.split(',')[3]
+
+                if 'FUNCTION_NAME' in node.split(',')[2]:
+                    #print("call_name")
+                    return node.split(',')[3]
+
+                if 'FUNCTION_TYPE' in node.split(',')[2]:
+                    #print("call_name")
+                    return node.split(',')[3]
+
+                if 'VAR_TYPE' in node.split(',')[2]:
+                    #print("call_name")
+                    return node.split(',')[3]
+
+                if 'INTEGER_VALUE' in node.split(',')[2] and node.split(',')[-2] is not '':
+                    #print("integer_value")
+                    return node.split(',')[3]
+
+                if 'DECL_REF_EXPR' in node.split(',')[2]:
+                    return node.split(',')[3]
+
+                if 'UNARY_OPERATOR' in node.split(',')[2]:
+                    #print(self.node.split(',')[2])
+                    return node.split(',')[3]
+
+                if 'BINARY_OPERATOR' in node.split(',')[2]:
+                    return node.split(',')[3]
+
+                if 'UNEXPOSED_EXPR' in node.split(',')[2]:
+                    return node.split(',')[3]
+
+            return node.split(',')[2]
+
         def trans2seq(r):
             global transIndex
             blocks = []
             func(r, blocks, r)
             tree = []
-            #for b in blocks:
             if(len(blocks) > 0):
                 btree = tree_to_index(blocks[0])
                 tree.append(btree)
@@ -492,8 +765,23 @@ class Pipeline:
                 print("Generated " +str(transIndex) +" sequences.")
             return []
 
+        print("VOCAB")
+        print(vocab)
+
         trees = pd.read_pickle(data_path)
-        trees['code'] = trees['code'].apply(trans2seq)
+        print("BEFORE:")
+        print(trees['code'])
+        trees['code'] = trees['code'].apply(preprocess_trees_bigrams)
+        print("AFTER:")
+        print(trees['code'])
+
+        bigram_hashes_and_indices = {}
+        for elem in vocab:
+            bigram_hashes_and_indices[elem] = vocab[elem].index
+
+        with open('./data/bigram_hashes_and_indices.pkl', 'wb') as handle:
+            pickle.dump(bigram_hashes_and_indices, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
         trees.to_pickle(self.root+part+'/blocks.pkl')
 
 
@@ -507,8 +795,8 @@ class Pipeline:
         self.dictionary_and_embedding(None,128)
         print('generate block sequences...')
         self.generate_block_seqs(self.train_file_path, 'train')
-        self.generate_block_seqs(self.dev_file_path, 'dev')
-        self.generate_block_seqs(self.test_file_path, 'test')
+        #self.generate_block_seqs(self.dev_file_path, 'dev')
+        #self.generate_block_seqs(self.test_file_path, 'test')
 
 parser = argparse.ArgumentParser(description="Specify the source code pickle file.")
 parser.add_argument('--source')
@@ -516,5 +804,5 @@ args = parser.parse_args()
 if not args.source:
     print("No specified source code pickle file.")
     exit(1)
-ppl = Pipeline('3:1:1', 'data/', args.source)
+ppl = Pipeline('1:0:0', 'data/', args.source)
 ppl.run()

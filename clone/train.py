@@ -1,6 +1,7 @@
 import pandas as pd
 import torch
 import time
+import sys
 import numpy as np
 import warnings
 from gensim.models.word2vec import Word2Vec
@@ -41,6 +42,7 @@ if __name__ == '__main__':
 
     word2vec = Word2Vec.load(root+lang+"/train/embedding/node_w2v_128").wv
     MAX_TOKENS = word2vec.syn0.shape[0]
+    #print(MAX_TOKENS)
     EMBEDDING_DIM = word2vec.syn0.shape[1]
     embeddings = np.zeros((MAX_TOKENS + 1, EMBEDDING_DIM), dtype="float32")
     embeddings[:word2vec.syn0.shape[0]] = word2vec.syn0
@@ -50,7 +52,7 @@ if __name__ == '__main__':
     LABELS = 1
     EPOCHS = 5
     BATCH_SIZE = 32
-    USE_GPU = True
+    USE_GPU = False
 
     model = BatchProgramCC(EMBEDDING_DIM,HIDDEN_DIM,MAX_TOKENS+1,ENCODE_DIM,LABELS,BATCH_SIZE,
                                    USE_GPU, embeddings)
@@ -61,7 +63,6 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adamax(parameters)
     loss_function = torch.nn.BCELoss()
 
-    print(train_data)
     precision, recall, f1 = 0, 0, 0
     print('Start training...')
     for t in range(1, categories+1):
@@ -96,6 +97,7 @@ if __name__ == '__main__':
                 loss = loss_function(output, Variable(train_labels))
                 loss.backward()
                 optimizer.step()
+                print("Epoch: "+str(epoch)+"  Batches done: "+str(i/BATCH_SIZE)+"/"+str(len(train_data_t)/BATCH_SIZE))
         print("Testing-%d..."%t)
         # testing procedure
         predicts = []
@@ -131,5 +133,7 @@ if __name__ == '__main__':
             print("Type-" + str(t) + ": " + str(p) + " " + str(r) + " " + str(f))
         else:
             precision, recall, f1, _ = precision_recall_fscore_support(trues, predicts, average='binary')
+            print(trues)
+            print(predicts)
 
     print("Total testing results(P,R,F1):%.3f, %.3f, %.3f" % (precision, recall, f1))

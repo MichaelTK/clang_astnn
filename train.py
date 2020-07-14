@@ -9,6 +9,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import os
 import sys
+import argparse
 
 
 def get_batch(dataset, idx, bs):
@@ -16,11 +17,11 @@ def get_batch(dataset, idx, bs):
     data, labels = [], []
     for _, item in tmp.iterrows():
         data.append(item[1])
-        labels.append(item[2]-1)
+        labels.append(int(item[2])-1) #added the int() wrapper to handle the input being a string. It's a hacky fix for running this on the cheaters dataset programs.pkl, which for some reason is generated with the numbers as strings
     return data, torch.LongTensor(labels)
 
 
-if __name__ == '__main__':
+def main(num_of_labels):
     root = 'data/'
     train_data = pd.read_pickle(root+'train/blocks.pkl')
     val_data = pd.read_pickle(root + 'dev/blocks.pkl')
@@ -32,10 +33,10 @@ if __name__ == '__main__':
 
     HIDDEN_DIM = 100
     ENCODE_DIM = 128
-    LABELS = 104
+    LABELS = num_of_labels
     EPOCHS = 15
     BATCH_SIZE = 64
-    USE_GPU = True
+    USE_GPU = False
     MAX_TOKENS = word2vec.syn0.shape[0]
     EMBEDDING_DIM = word2vec.syn0.shape[1]
 
@@ -84,6 +85,7 @@ if __name__ == '__main__':
             total_acc += (predicted == train_labels).sum()
             total += len(train_labels)
             total_loss += loss.item()*len(train_inputs)
+            print("Epoch: "+str(epoch)+"  Batches done: "+str(i/BATCH_SIZE)+"/"+str(len(train_data)/BATCH_SIZE))
 
         train_loss_.append(total_loss / total)
         train_acc_.append(total_acc.item() / total)
@@ -143,3 +145,11 @@ if __name__ == '__main__':
         total += len(test_labels)
         total_loss += loss.item() * len(test_inputs)
     print("Testing results(Acc):", total_acc.item() / total)
+
+parser = argparse.ArgumentParser(description="Choose the number of labels.")
+parser.add_argument('--labels',type=int)
+args = parser.parse_args()
+if not args.labels:
+    print("No specified number of labels.")
+    exit(1)
+main(args.labels)
